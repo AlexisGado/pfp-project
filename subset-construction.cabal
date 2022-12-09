@@ -27,7 +27,7 @@ library
   exposed-modules:
       Automaton
       SubsetConstruction
-      Thomson
+      Thompson
       Utils
   other-modules:
       Paths_subset_construction
