@@ -1,1 +1,1 @@
-module Thomson () where
+module Thompson () where
