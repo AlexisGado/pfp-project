@@ -15,7 +15,9 @@ exploreLabelFromStates :: Map.Map Auto.State [Auto.Edge] -> Auto.Label -> Set.Se
 exploreLabelFromStates transitions label states = List.foldl' (exploreLabelFromState transitions label) states (Set.toList states)
 
 epsilonClosure :: Map.Map Auto.State [Auto.Edge] -> Set.Set Auto.State -> Set.Set Auto.State
-epsilonClosure transitions states = exploreLabelFromStates transitions Auto.Epsilon states
+epsilonClosure transitions states | Set.size states ==  Set.size explored = states
+                                  | otherwise = epsilonClosure transitions explored
+                    where explored = exploreLabelFromStates transitions Auto.Epsilon states
 
 nfaToDfa :: Auto.Automaton -> Auto.Automaton
 nfaToDfa automaton =  automaton
