@@ -1,13 +1,14 @@
-module Automaton (Automaton, randomAutomaton, exampleAutomaton, automatonToString) where
+module Automaton (Automaton(..), State, Edge, Label(..), randomAutomaton, exampleAutomaton, automatonToString) where
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
 -- A node's "id"
 type State = Int
 -- A labeled edge pointing to a node
-type Edge = (Int, State)
+data Label = Epsilon | Label !Int deriving Eq
+type Edge = (Label, State)
 -- Successors map, initial states and final states
-data Automaton = Automaton (Map.Map State [Edge]) (Set.Set State) (Set.Set State)
+data Automaton = Automaton !(Map.Map State [Edge]) !(Set.Set State) !(Set.Set State)
 
 -- Example taken from https://en.wikipedia.org/wiki/Powerset_construction (5 states NFA generating a 16 states DFA through the algorithm)
 initStates :: Set.Set State
@@ -15,7 +16,7 @@ initStates = Set.fromList [0]
 finalStates :: Set.Set State
 finalStates = Set.fromList [4]
 successors :: Map.Map State [Edge]
-successors = Map.fromList [(0, [(0, 0), (1, 0), (1, 1)]), (1, [(0, 2), (1, 2)]), (2, [(0, 3), (1, 3)]), (3, [(0, 4), (1, 4)]), (4, [])]
+successors = Map.fromList [(0, [(Label 0, 0), (Label 1, 0), (Label 1, 1)]), (1, [(Label 0, 2), (Label 1, 2)]), (2, [(Label 0, 3), (Label 1, 3)]), (3, [(Label 0, 4), (Label 1, 4)]), (4, [])]
 exampleAutomaton::Automaton
 exampleAutomaton = Automaton successors initStates finalStates
 
