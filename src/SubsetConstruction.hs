@@ -7,7 +7,7 @@ import qualified Data.Set   as Set
 
 exploreLabelFromNFAState :: A.AdjacencyList -> A.Label -> A.State -> [A.State]
 exploreLabelFromNFAState nfaAdjacency label state = [s | (l, s) <- edges, l == label]
-    where edges = Maybe.fromMaybe [] (Map.lookup state nfaAdjacency)
+    where edges = nfaAdjacency Map.! state
 
 exploreLabelFromDFAState :: A.AdjacencyList -> A.Label -> Set.Set A.State -> Set.Set A.State
 exploreLabelFromDFAState nfaAdjacency label =
@@ -27,6 +27,16 @@ nextStates nfaAdjacency alphabet dfaStates = [
         l <- alphabet
     ]
 
+
+addDfaEdge :: (Map.Map (Set.Set A.State) A.State, A.AdjacencyList, [Set.Set A.State])
+                -> (A.Label, Set.Set A.State, Set.Set A.State)
+                -> (Map.Map (Set.Set A.State) A.State, A.AdjacencyList, [Set.Set A.State])
+addDfaEdge (dfaSM, dfaA, tV) (l, originS, destS) = case Map.lookup destS dfaSM of
+                -- TODO : increment dfa state value
+                Nothing -> (Map.insert destS 42 dfaSM, Map.insertWith (++) originIdx [(l, 42)] dfaA, destS : tV)
+                Just s -> (dfaSM, Map.insertWith (++) originIdx [(l,s)] dfaA, tV)
+            where originIdx = dfaSM Map.! originS
+
 tempRec :: A.AdjacencyList -> [A.Label] -> Map.Map (Set.Set A.State) A.State -> A.AdjacencyList -> [Set.Set A.State] -> A.AdjacencyList
 tempRec _ _ _ dfaAdjacency []                                   = dfaAdjacency
 tempRec nfaAdjacency alphabet dfaStatesMap dfaAdjacency toVisit =
@@ -37,10 +47,6 @@ tempRec nfaAdjacency alphabet dfaStatesMap dfaAdjacency toVisit =
                         (dfaStatesMap, dfaAdjacency, [])
                         nStates
                 nStates = nextStates nfaAdjacency alphabet toVisit
-                addDfaEdge (dfaSM, dfaA, tV) (l, originS, destS) = case Map.lookup destS dfaSM of
-                        Nothing -> (Map.insert destS 42 dfaSM, Map.insertWith (++) originIdx [(l, 42)] dfaA, destS : tV)
-                        Just s -> (dfaSM, Map.insertWith (++) originIdx [(l,s)] dfaA, tV)
-                    where originIdx = dfaSM Map.! originS
 
 
 
