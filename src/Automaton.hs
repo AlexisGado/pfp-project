@@ -1,4 +1,4 @@
-module Automaton (Automaton(..), State, Edge, Label(..), randomAutomaton, exampleAutomaton, automatonToString) where
+module Automaton (Automaton(..), AdjacencyList, State, Edge, Label(..), randomAutomaton, exampleAutomaton) where
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
@@ -8,21 +8,21 @@ type State = Int
 data Label = Epsilon | Label !Int deriving Eq
 type Edge = (Label, State)
 -- Successors map, initial states and final states
-data Automaton = Automaton !(Map.Map State [Edge]) !(Set.Set State) !(Set.Set State)
+type AdjacencyList = Map.Map State [Edge]
+data Automaton = Automaton !AdjacencyList ![Label] !(Set.Set State) !(Set.Set State)
 
 -- Example taken from https://en.wikipedia.org/wiki/Powerset_construction (5 states NFA generating a 16 states DFA through the algorithm)
+alphabet :: [Label]
+alphabet = [Label 0, Label 1]
 initStates :: Set.Set State
 initStates = Set.fromList [0]
 finalStates :: Set.Set State
 finalStates = Set.fromList [4]
-successors :: Map.Map State [Edge]
+successors :: AdjacencyList
 successors = Map.fromList [(0, [(Label 0, 0), (Label 1, 0), (Label 1, 1)]), (1, [(Label 0, 2), (Label 1, 2)]), (2, [(Label 0, 3), (Label 1, 3)]), (3, [(Label 0, 4), (Label 1, 4)]), (4, [])]
 exampleAutomaton::Automaton
-exampleAutomaton = Automaton successors initStates finalStates
+exampleAutomaton = Automaton successors alphabet initStates finalStates
 
 randomAutomaton :: Int -> Int -> Int -> Int -> Float -> Automaton
-randomAutomaton alphabetSize nbState nbInit nbFinal probability = Automaton Map.empty Set.empty Set.empty
+randomAutomaton alphabetSize nbState nbInit nbFinal probability = Automaton Map.empty [] Set.empty Set.empty
 
-automatonToString :: Automaton -> String
-automatonToString = recToString ""
-    where recToString str autom =  ""
