@@ -27,9 +27,9 @@ exampleAutomaton = Automaton successors alphabet initStates finalStates
 initStates2 :: Set.Set State
 initStates2 = Set.fromList [0]
 finalStates2 :: Set.Set State
-finalStates2 = Set.fromList [2,3]
+finalStates2 = Set.fromList [2]
 successors2 :: AdjacencyList
-successors2 = Map.fromList [(0, [(Label 0, 1), (Epsilon, 2)]), (1, [(Label 1, 1), (Label 1, 3)]), (2, [(Epsilon, 1), (Label 0, 3)]), (3, [(Label 0, 2)])]
+successors2 = Map.fromList [(0, [(Label 0, 1)]), (1, [(Label 1, 2)]), (2, [(Epsilon, 0)])]
 exampleAutomaton2 :: Automaton
 exampleAutomaton2 = Automaton successors2 alphabet initStates2 finalStates2
 
