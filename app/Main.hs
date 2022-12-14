@@ -1,4 +1,6 @@
 module Main (main) where
+import           Automaton          (exampleAutomaton2)
+import qualified SubsetConstruction as SC
 
 main :: IO ()
-main = putStrLn "Hi mom"
+main = print $ SC.nfaToDfa exampleAutomaton2
