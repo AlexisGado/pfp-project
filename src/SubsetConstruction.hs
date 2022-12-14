@@ -35,10 +35,10 @@ addDfaEdge ((dfaSM, maxIdx), dfaA, tV) (l, originS, destS) = case Map.lookup des
                 Just s -> ((dfaSM, maxIdx), Map.insertWith (++) originIdx [(l,s)] dfaA, tV)
             where originIdx = dfaSM Map.! originS
 
-tempRec :: A.AdjacencyList -> [A.Label] -> A.DfaStatesMap -> A.AdjacencyList -> [Set.Set A.State] -> A.AdjacencyList
-tempRec _ _ _ dfaAdjacency []                                   = dfaAdjacency
-tempRec nfaAdjacency alphabet dfaStatesMap dfaAdjacency toVisit =
-    tempRec nfaAdjacency alphabet newDfaSM newDfaA newToVisit
+explore :: A.AdjacencyList -> Set.Set A.State -> [A.Label] -> A.DfaStatesMap -> A.AdjacencyList -> Set.Set A.State -> [Set.Set A.State] -> (A.AdjacencyList, Set.Set A.State)
+explore _ _ _ _ dfaAdjacency dfaFinals []                                   = (dfaAdjacency, dfaFinals)
+explore nfaAdjacency nfaFinals alphabet dfaStatesMap dfaAdjacency dfaFinals toVisit =
+    explore nfaAdjacency nfaFinals alphabet newDfaSM newDfaA (((dfaFinals))) newToVisit
         where   (newDfaSM, newDfaA, newToVisit) =
                     List.foldl'
                         addDfaEdge
@@ -47,8 +47,8 @@ tempRec nfaAdjacency alphabet dfaStatesMap dfaAdjacency toVisit =
                 nStates = nextStates nfaAdjacency alphabet toVisit
 
 nfaToDfa :: A.Automaton -> A.Automaton
-nfaToDfa (A.Automaton nfaAdjacency alphabet inits finals) = A.Automaton newAdjacency alphabet dfaInits finals
-        where newAdjacency = tempRec nfaAdjacency alphabet (initDfaStatesMap, 0) initDfaAdjacency [inits]
+nfaToDfa (A.Automaton nfaAdjacency alphabet inits nfaFinals) = A.Automaton newAdjacency alphabet dfaInits dfaFinals
+        where (newAdjacency, dfaFinals) = explore nfaAdjacency nfaFinals alphabet (initDfaStatesMap, 0) initDfaAdjacency Set.empty [inits]
               initDfaStatesMap =  Map.fromList [(inits, 0)]
               initDfaAdjacency =  Map.fromList [(0, [])]
               dfaInits = Set.fromList [0]
