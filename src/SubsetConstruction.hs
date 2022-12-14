@@ -26,23 +26,26 @@ nextStates nfaAdjacency alphabet dfaStates = [
         l <- alphabet
     ]
 
-addDfaEdge :: (A.DfaStatesMap, A.AdjacencyList, [Set.Set A.State])
+addDfaEdge ::  Set.Set A.State -> (A.DfaStatesMap, A.AdjacencyList, Set.Set A.State, [Set.Set A.State])
                 -> (A.Label, Set.Set A.State, Set.Set A.State)
-                -> (A.DfaStatesMap, A.AdjacencyList, [Set.Set A.State])
-addDfaEdge ((dfaSM, maxIdx), dfaA, tV) (l, originS, destS) = case Map.lookup destS dfaSM of
-                Nothing -> ((Map.insert destS newIdx dfaSM, newIdx), Map.insertWith (++) originIdx [(l, newIdx)] dfaA, destS : tV)
-                    where newIdx = maxIdx + 1
-                Just s -> ((dfaSM, maxIdx), Map.insertWith (++) originIdx [(l,s)] dfaA, tV)
-            where originIdx = dfaSM Map.! originS
+                -> (A.DfaStatesMap, A.AdjacencyList, Set.Set A.State, [Set.Set A.State])
+addDfaEdge nfaFinals ((dfaSM, maxIdx), dfaA, dfaF, tV) (l, originS, destS) = case Map.lookup destS dfaSM of
+                Nothing | Set.null destS -> ((dfaSM, maxIdx), dfaA, dfaF, tV)
+                Nothing -> ((Map.insert destS newState dfaSM, newState), Map.insertWith (++) originState [(l, newState)] dfaA, newDfaF, destS : tV)
+                    where newState = maxIdx + 1
+                          isFinal = List.any (`Set.member` nfaFinals) (Set.toList destS)
+                          newDfaF = if isFinal then Set.insert newState dfaF else dfaF
+                Just s -> ((dfaSM, maxIdx), Map.insertWith (++) originState [(l,s)] dfaA, dfaF, tV)
+            where originState = dfaSM Map.! originS
 
 explore :: A.AdjacencyList -> Set.Set A.State -> [A.Label] -> A.DfaStatesMap -> A.AdjacencyList -> Set.Set A.State -> [Set.Set A.State] -> (A.AdjacencyList, Set.Set A.State)
 explore _ _ _ _ dfaAdjacency dfaFinals []                                   = (dfaAdjacency, dfaFinals)
 explore nfaAdjacency nfaFinals alphabet dfaStatesMap dfaAdjacency dfaFinals toVisit =
-    explore nfaAdjacency nfaFinals alphabet newDfaSM newDfaA (((dfaFinals))) newToVisit
-        where   (newDfaSM, newDfaA, newToVisit) =
+    explore nfaAdjacency nfaFinals alphabet newDfaSM newDfaA newDfaFinals newToVisit
+        where   (newDfaSM, newDfaA, newDfaFinals, newToVisit) =
                     List.foldl'
-                        addDfaEdge
-                        (dfaStatesMap, dfaAdjacency, [])
+                        (addDfaEdge nfaFinals)
+                        (dfaStatesMap, dfaAdjacency, dfaFinals, [])
                         nStates
                 nStates = nextStates nfaAdjacency alphabet toVisit
 
