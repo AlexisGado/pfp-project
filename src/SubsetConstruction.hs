@@ -1,8 +1,9 @@
 module SubsetConstruction (nfaToDfa) where
-import qualified Automaton as A
-import qualified Data.List as List
-import qualified Data.Map  as Map
-import qualified Data.Set  as Set
+import qualified Automaton                   as A
+import           Control.Parallel.Strategies (parMap, rdeepseq)
+import qualified Data.List                   as List
+import qualified Data.Map                    as Map
+import qualified Data.Set                    as Set
 
 exploreLabelFromNFAState :: A.AdjacencyList -> A.Label -> A.State -> [A.State]
 exploreLabelFromNFAState nfaAdjacency label state = [s | (l, s) <- edges, l == label]
@@ -19,12 +20,21 @@ epsilonClosure nfaAdjacency nfaStates    | Set.size nfaStates ==  Set.size explo
                                         | otherwise = epsilonClosure nfaAdjacency explored
                     where explored = Set.union nfaStates (exploreLabelFromDFAState nfaAdjacency A.Epsilon nfaStates)
 
+-- nextStates :: A.AdjacencyList -> [A.Label] -> [Set.Set A.State] -> [(A.Label, Set.Set A.State, Set.Set A.State)]
+-- nextStates nfaAdjacency alphabet dfaStates = [
+--         (l, s, (epsilonClosure nfaAdjacency .  exploreLabelFromDFAState nfaAdjacency l) s) |
+--         s <- dfaStates,
+--         l <- alphabet
+--     ] `using` parList r0
+
 nextStates :: A.AdjacencyList -> [A.Label] -> [Set.Set A.State] -> [(A.Label, Set.Set A.State, Set.Set A.State)]
-nextStates nfaAdjacency alphabet dfaStates = [
-        (l, s, (epsilonClosure nfaAdjacency .  exploreLabelFromDFAState nfaAdjacency l) s) |
-        s <- dfaStates,
-        l <- alphabet
-    ]
+nextStates nfaAdjacency alphabet dfaStates =
+        parMap rdeepseq
+        (\(l, s) -> (l, s, (epsilonClosure nfaAdjacency .  exploreLabelFromDFAState nfaAdjacency l) s))
+        [(l,s) |
+            l <- alphabet,
+            s <- dfaStates
+        ]
 
 addDfaEdge ::  Set.Set A.State -> (A.DfaStatesMap, A.AdjacencyList, Set.Set A.State, [Set.Set A.State])
                 -> (A.Label, Set.Set A.State, Set.Set A.State)
