@@ -3,9 +3,8 @@ import           Control.Monad                      (msum)
 import           Data.Char                          (ord)
 import qualified Text.ParserCombinators.Parsec      as P
 import qualified Text.ParserCombinators.Parsec.Expr as PE
-import Data.Bits (Bits(xor))
 import qualified Data.Set                           as Set
-import            Automaton                           (Label(..))
+import            Automaton                           (Automaton(..), Label(..), AdjacencyList)
 import qualified Data.Map as Map
 
 data Node = Concat !Node !Node | Star !Node | Or !Node !Node | Character !Int deriving(Show)
@@ -21,17 +20,24 @@ regexParser = PE.buildExpressionParser opTable base
     parens = P.between (P.char '(') (P.char ')')
 
 
-makeNFA :: (Num b, Ord b) => Either a Node -> (Map.Map b [(Label, b)], b)
-makeNFA ((Right ast)) = thompsons ast 1 0 1
+
+
+
+makeNFA :: Either a Node -> Automaton
+makeNFA ((Right ast)) = Automaton table alphabet start end where 
+  (table, _) = thompsons ast 1 0 1
+  alphabet = Set.toList ((buildAlph ast Set.empty))
+  start = Set.singleton 1
+  end = Set.singleton 0
 makeNFA (Left _) = error "Bad AST" 
 
-buildAlph :: Node -> Set.Set Int -> Set.Set Int
+
+
+buildAlph :: Node -> Set.Set Label -> Set.Set Label
 buildAlph (Concat r l) alph = Set.union (buildAlph r alph) (buildAlph l alph)
 buildAlph (Star l) alph = buildAlph l alph
 buildAlph (Or r l) alph = Set.union (buildAlph r alph) (buildAlph l alph)
-buildAlph (Character x) alph = Set.insert x alph 
-
-
+buildAlph (Character x) alph = Set.insert (Label x) alph 
 
 
 thompsons :: (Num b, Ord b) => Node -> b -> b -> b -> (Map.Map b [(Label, b)], b)

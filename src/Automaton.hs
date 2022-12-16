@@ -5,7 +5,7 @@ import qualified Data.Set as Set
 -- A node's "id"
 type State = Int
 -- A labeled edge pointing to a node
-data Label = Epsilon | Label !Int deriving (Eq, Show)
+data Label = Epsilon | Label !Int deriving (Eq, Show, Ord)
 type Edge = (Label, State)
 -- Successors map, initial states and final states
 type AdjacencyList = Map.Map State [Edge]
