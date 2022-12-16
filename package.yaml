@@ -24,6 +24,8 @@ dependencies:
   - containers
   - random
   - parsec
+  - parallel
+  - deepseq
 
 ghc-options:
   - -Wall
@@ -46,7 +48,9 @@ executables:
     ghc-options:
       - -threaded
       - -rtsopts
+      - -eventlog
       - -with-rtsopts=-N
+      - -O2
     dependencies:
       - subset-construction
 

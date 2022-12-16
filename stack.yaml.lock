@@ -18,4 +18,11 @@ packages:
       size: 1519
   original:
     hackage: splitmix-0.1.0.4
+- completed:
+    hackage: parallel-3.2.2.0@sha256:6edd5a06938cea3d28b406d5231683f89737e854af144a8800aa69e1eee785e0,1821
+    pantry-tree:
+      sha256: 6ec36425356925d6d9042769a29ab4ec2aa69c2a7161c49ff18a9a77c1d957b1
+      size: 392
+  original:
+    hackage: parallel-3.2.2.0
 snapshots: []
