@@ -28,7 +28,6 @@ library
       Automaton
       SubsetConstruction
       Thompson
-      Thompson2
       Utils
   other-modules:
       Paths_subset_construction
