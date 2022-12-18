@@ -1,4 +1,4 @@
-module Thompson (regexParser, makeNFA) where
+module Thompson (regexParser, makeNFA, buildDictNFA) where
 import           Automaton                          (Automaton (..), Label (..))
 import           Control.Monad                      (msum)
 import           Data.Char                          (ord)
@@ -20,9 +20,6 @@ regexParser = PE.buildExpressionParser opTable base
     parens = P.between (P.char '(') (P.char ')')
 
 
-
-
-
 makeNFA :: Either a Node -> Automaton
 makeNFA ((Right ast)) = Automaton table alphabet start end where
   (table, _) = thompsons ast 1 0 1
@@ -30,8 +27,6 @@ makeNFA ((Right ast)) = Automaton table alphabet start end where
   start = Set.singleton 1
   end = Set.singleton 0
 makeNFA (Left _) = error "Bad AST"
-
-
 
 buildAlph :: Node -> Set.Set Label -> Set.Set Label
 buildAlph (Concat r l) alph  = Set.union (buildAlph r alph) (buildAlph l alph)
@@ -60,5 +55,29 @@ thompsons (Star s) q f l = (Map.union smap stmap, ls) where
   si = l+1; sf = l+2
   ln = l+2
 
---showNode :: Either a Node -> String
---showNode (Right (Concat x y)) = show "hi"
+
+addWord :: (Num a, Ord a) => [Char] -> Map.Map a [(Label, a)] -> Set.Set Label -> a -> Set.Set a -> a -> (Map.Map a [(Label, a)], Set.Set Label, Set.Set a, a)
+addWord (x:xs) lst alph st fi l = addWord xs nlst nalph nl fi nl where
+  t = Label (ord x)
+  nl = l + 1
+  nalph = Set.insert t alph
+  nlst = Map.insert st [(t, nl)] lst
+addWord [] lst alph _ fi l = (lst, alph, nfi, l) where
+  nfi = Set.insert l fi
+
+dictNFA :: (Num t, Ord t) => [[Char]] -> Map.Map t [(Label, t)] -> Set.Set Label -> t -> Set.Set t -> t -> (Map.Map t [(Label, t)], Set.Set Label, Set.Set t)
+dictNFA (x:xs) lst alph st fi l = dictNFA xs nlst nalph st nfi nl where
+  (nlst, nalph, nfi, nl) = addWord x ilst alph il fi il
+  Just tmp = Map.lookup 0 lst
+  newstart = (Epsilon, il):tmp
+  ilst = Map.insert 0 newstart lst
+  il = l+1
+dictNFA [] lst alph _ fi _ = (lst, alph, fi)
+
+buildDictNFA :: [[Char]] -> Automaton
+buildDictNFA l@(x:xs) = Automaton lst alph start fi where
+  alph = Set.toList salph
+  (lst, salph, fi) = dictNFA l (Map.insert 0 [] Map.empty) Set.empty 0 Set.empty 0
+  start = Set.singleton 0 
+buildDictNFA [] = error "empty dictionary"
+

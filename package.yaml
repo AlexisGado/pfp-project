@@ -26,6 +26,7 @@ dependencies:
   - parsec
   - parallel
   - deepseq
+  - text
 
 ghc-options:
   - -Wall

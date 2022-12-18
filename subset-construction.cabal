@@ -41,6 +41,7 @@ library
     , parallel
     , parsec
     , random
+    , text
   default-language: Haskell2010
 
 executable subset-construction-exe
@@ -58,6 +59,7 @@ executable subset-construction-exe
     , parsec
     , random
     , subset-construction
+    , text
   default-language: Haskell2010
 
 test-suite subset-construction-test
@@ -76,4 +78,5 @@ test-suite subset-construction-test
     , parsec
     , random
     , subset-construction
+    , text
   default-language: Haskell2010
