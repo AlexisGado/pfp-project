@@ -1,7 +1,8 @@
-module Thompson (regexParser, makeNFA, buildDictNFA) where
-import           Automaton                          (Automaton (..), Label (..))
+module Thompson (regexParser, makeNFA, buildDictNFA, checkAccept) where
+import           Automaton                          (Automaton (..), Label (..), State (..))
 import           Control.Monad                      (msum)
 import           Data.Char                          (ord)
+import Data.List ( find )
 import qualified Data.Map                           as Map
 import qualified Data.Set                           as Set
 import qualified Text.ParserCombinators.Parsec      as P
@@ -75,9 +76,23 @@ dictNFA (x:xs) lst alph st fi l = dictNFA xs nlst nalph st nfi nl where
 dictNFA [] lst alph _ fi _ = (lst, alph, fi)
 
 buildDictNFA :: [[Char]] -> Automaton
-buildDictNFA l@(x:xs) = Automaton lst alph start fi where
+buildDictNFA l@(_:_) = Automaton lst alph start fi where
   alph = Set.toList salph
   (lst, salph, fi) = dictNFA l (Map.insert 0 [] Map.empty) Set.empty 0 Set.empty 0
-  start = Set.singleton 0 
+  start = Set.singleton 0
 buildDictNFA [] = error "empty dictionary"
 
+
+checkAccept :: [Char] -> Automaton -> State -> Bool
+checkAccept (x:xs) dfa c = case findTransition x dfa c of
+  Just e -> checkAccept xs dfa n where (_,n) = e
+  Nothing -> False
+checkAccept [] (Automaton _ _ _ end) c = c `elem` end
+
+findTransition :: Char -> Automaton -> Int -> Maybe (Label, State)
+findTransition x (Automaton lst _ _ _) c = case Map.lookup c lst of
+ Just es -> find (\y -> fst y == Label (ord x)) es
+ Nothing -> Nothing
+--checkAccept xs Automaton n where
+--checkAccept [] dfa@(Automaton lst alph start end) c 
+-- | Just 
