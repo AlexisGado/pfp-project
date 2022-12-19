@@ -1,8 +1,10 @@
-module Thompson (regexParser, makeNFA, buildDictNFA, checkAccept) where
+module Thompson (regexParser, makeThompsonNFA, makeDictNFA, checkAccept, checkAlphabet, buildList) where
 import           Automaton                          (Automaton (..), Label (..), State (..))
 import           Control.Monad                      (msum)
-import           Data.Char                          (ord)
-import Data.List ( find )
+import           Data.Char                          (ord, isAlpha)
+import 			 Data.List 							( find )
+import 			 Data.Text.IO as TIO 				( readFile )
+import qualified Data.Text as T
 import qualified Data.Map                           as Map
 import qualified Data.Set                           as Set
 import qualified Text.ParserCombinators.Parsec      as P
@@ -20,22 +22,23 @@ regexParser = PE.buildExpressionParser opTable base
     base = msum [Character . ord <$> P.noneOf "()*|", parens regexParser]
     parens = P.between (P.char '(') (P.char ')')
 
-
-makeNFA :: Either a Node -> Automaton
-makeNFA ((Right ast)) = Automaton table alphabet start end where
+-- Build NFA from regex AST following Thompson's Algorithm
+makeThompsonNFA :: Either a Node -> Automaton
+makeThompsonNFA ((Right ast)) = Automaton table alphabet start end where
   (table, _) = thompsons ast 1 0 1
   alphabet = Set.toList (buildAlph ast Set.empty)
   start = Set.singleton 1
   end = Set.singleton 0
-makeNFA (Left _) = error "Bad AST"
+makeThompsonNFA (Left _) = error "Bad AST"
 
+-- buildAlph: Build alphabet from regex AST. Helper method for makeThompsonNFA
 buildAlph :: Node -> Set.Set Label -> Set.Set Label
 buildAlph (Concat r l) alph  = Set.union (buildAlph r alph) (buildAlph l alph)
 buildAlph (Star l) alph      = buildAlph l alph
 buildAlph (Or r l) alph      = Set.union (buildAlph r alph) (buildAlph l alph)
 buildAlph (Character x) alph = Set.insert (Label x) alph
 
-
+-- thompsons: Build adjacency list from regex AST. Helper method for makeThompsonNFA
 thompsons :: (Num b, Ord b) => Node -> b -> b -> b -> (Map.Map b [(Label, b)], b)
 thompsons (Character x) q f l = (Map.fromList [(q, [(Label x, f)])], l)
 thompsons (Concat s t) q f l = (Map.union smap tmap, lt) where
@@ -56,7 +59,7 @@ thompsons (Star s) q f l = (Map.union smap stmap, ls) where
   si = l+1; sf = l+2
   ln = l+2
 
-
+-- addWord: (non thompsons) helper method for dictNFA
 addWord :: (Num a, Ord a) => [Char] -> Map.Map a [(Label, a)] -> Set.Set Label -> a -> Set.Set a -> a -> (Map.Map a [(Label, a)], Set.Set Label, Set.Set a, a)
 addWord (x:xs) lst alph st fi l = addWord xs nlst nalph nl fi nl where
   t = Label (ord x)
@@ -66,6 +69,7 @@ addWord (x:xs) lst alph st fi l = addWord xs nlst nalph nl fi nl where
 addWord [] lst alph _ fi l = (lst, alph, nfi, l) where
   nfi = Set.insert l fi
 
+-- dictNFA: (non thompsons) helper method for buildDictNFA
 dictNFA :: (Num t, Ord t) => [[Char]] -> Map.Map t [(Label, t)] -> Set.Set Label -> t -> Set.Set t -> t -> (Map.Map t [(Label, t)], Set.Set Label, Set.Set t)
 dictNFA (x:xs) lst alph st fi l = dictNFA xs nlst nalph st nfi nl where
   (nlst, nalph, nfi, nl) = addWord x ilst alph il fi il
@@ -75,14 +79,21 @@ dictNFA (x:xs) lst alph st fi l = dictNFA xs nlst nalph st nfi nl where
   il = l+1
 dictNFA [] lst alph _ fi _ = (lst, alph, fi)
 
-buildDictNFA :: [[Char]] -> Automaton
-buildDictNFA l@(_:_) = Automaton lst alph start fi where
+-- makeDictNFA: Build NFA from dict of accepted strings in a language 
+makeDictNFA :: [[Char]] -> Automaton
+makeDictNFA l@(_:_) = Automaton lst alph start fi where
   alph = Set.toList salph
   (lst, salph, fi) = dictNFA l (Map.insert 0 [] Map.empty) Set.empty 0 Set.empty 0
   start = Set.singleton 0
-buildDictNFA [] = error "empty dictionary"
+makeDictNFA [] = error "empty dictionary"
 
+-- checkAlphabet: Check if word agrees with alphabet for a given Automaton
+checkAlphabet :: [Char] -> Automaton -> Bool
+checkAlphabet (x:xs) dfa@(Automaton _ alph _ _) = n && checkAlphabet xs dfa
+        where n = Label (ord x) `elem` alph
+checkAlphabet [] _ = True
 
+-- checkAccept: check if word is in a language. Automaton MUST be a DFA
 checkAccept :: [Char] -> Automaton -> State -> Bool
 checkAccept (x:xs) dfa c = case findTransition x dfa c of
   Just e -> checkAccept xs dfa n where (_,n) = e
@@ -93,6 +104,15 @@ findTransition :: Char -> Automaton -> Int -> Maybe (Label, State)
 findTransition x (Automaton lst _ _ _) c = case Map.lookup c lst of
  Just es -> find (\y -> fst y == Label (ord x)) es
  Nothing -> Nothing
---checkAccept xs Automaton n where
---checkAccept [] dfa@(Automaton lst alph start end) c 
--- | Just 
+
+buildList :: FilePath -> IO [[Char]]
+buildList filename = do
+ h <- TIO.readFile filename
+ let l = T.words h
+ let lnorm = map normalize l
+ let lnormset = Set.fromList lnorm
+ let lnormunique = Set.toList lnormset
+ return lnormunique
+
+normalize :: T.Text -> [Char]
+normalize string = [ x | x <- a, isAlpha x ] where a = T.unpack (T.toLower string)
