@@ -1,4 +1,4 @@
-module Thompson (regexParser, makeThompsonNFA, makeDictNFA, checkAccept, checkAlphabet, buildList) where
+module Thompson (regexParser, makeThompsonNFA, checkAccept, checkAlphabet, buildList) where
 import           Automaton                          (Automaton (..), Label (..),
                                                      State)
 import           Control.Monad                      (msum)
@@ -59,36 +59,6 @@ thompsons (Star s) q f l = (Map.union smap stmap, ls) where
   (smap, ls) = thompsons s si sf ln
   si = l+1; sf = l+2
   ln = l+2
-
--- addWord: (non thompsons) helper method for dictNFA
-addWord :: (Num a, Ord a) => [Char] -> Map.Map a [(Label, a)] -> Set.Set Label -> a -> Set.Set a -> a -> (Map.Map a [(Label, a)], Set.Set Label, Set.Set a, a)
-addWord (x:xs) lst alph st fi l = addWord xs nlst nalph nl fi nl where
-  t = Label (ord x)
-  nl = l + 1
-  nalph = Set.insert t alph
-  nlst = Map.insert st [(t, nl)] lst
-addWord [] lst alph _ fi l = (lst, alph, nfi, l) where
-  nfi = Set.insert l fi
-
--- dictNFA: (non thompsons) helper method for buildDictNFA
-dictNFA :: (Num t, Ord t) => [[Char]] -> Map.Map t [(Label, t)] -> Set.Set Label -> t -> Set.Set t -> t -> (Map.Map t [(Label, t)], Set.Set Label, Set.Set t)
-dictNFA (x:xs) lst alph st fi l = dictNFA xs nlst nalph st nfi nl where
-  (nlst, nalph, nfi, nl) = addWord x ilst alph il fi il
-  tmp = case Map.lookup 0 lst of
-    Just jTmp -> jTmp
-    Nothing   -> error "No initial node found"
-  newstart = (Epsilon, il):tmp
-  ilst = Map.insert 0 newstart lst
-  il = l+1
-dictNFA [] lst alph _ fi _ = (lst, alph, fi)
-
--- makeDictNFA: Build NFA from dict of accepted strings in a language
-makeDictNFA :: [[Char]] -> Automaton
-makeDictNFA l@(_:_) = Automaton lst alph start fi where
-  alph = Set.toList salph
-  (lst, salph, fi) = dictNFA l (Map.insert 0 [] Map.empty) Set.empty 0 Set.empty 0
-  start = Set.singleton 0
-makeDictNFA [] = error "empty dictionary"
 
 -- checkAlphabet: Check if word agrees with alphabet for a given Automaton
 checkAlphabet :: [Char] -> Automaton -> Bool

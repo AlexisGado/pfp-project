@@ -18,6 +18,8 @@ build-type:     Simple
 extra-source-files:
     README.md
     CHANGELOG.md
+    assets/100-0.ascii
+    assets/words.txt
 
 source-repository head
   type: git
@@ -26,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Automaton
+      Dictionary
       SubsetConstruction
       Thompson
       Utils

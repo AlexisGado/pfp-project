@@ -9,6 +9,7 @@ copyright: "2022 Alexis Gadonneix"
 extra-source-files:
   - README.md
   - CHANGELOG.md
+  - assets/**
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package

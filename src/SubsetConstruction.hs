@@ -3,11 +3,12 @@ import qualified Automaton                   as A
 import           Control.Parallel.Strategies (parMap, rdeepseq)
 import qualified Data.List                   as List
 import qualified Data.Map                    as Map
+import           Data.Maybe                  (fromMaybe)
 import qualified Data.Set                    as Set
 
 exploreLabelFromNFAState :: A.AdjacencyList -> A.Label -> A.State -> [A.State]
 exploreLabelFromNFAState nfaAdjacency label state = [s | (l, s) <- edges, l == label]
-    where edges = nfaAdjacency Map.! state
+    where edges = fromMaybe [] (Map.lookup state nfaAdjacency)
 
 exploreLabelFromDFAState :: A.AdjacencyList -> A.Label -> Set.Set A.State -> Set.Set A.State
 exploreLabelFromDFAState nfaAdjacency label =
@@ -46,7 +47,9 @@ addDfaEdge nfaFinals ((dfaSM, maxIdx), dfaA, dfaF, tV) (l, originS, destS) = cas
                           isFinal = List.any (`Set.member` nfaFinals) (Set.toList destS)
                           newDfaF = if isFinal then Set.insert newState dfaF else dfaF
                 Just s -> ((dfaSM, maxIdx), Map.insertWith (++) originState [(l,s)] dfaA, dfaF, tV)
-            where originState = dfaSM Map.! originS
+            where originState = case Map.lookup originS dfaSM of
+                    Just st -> st
+                    Nothing -> error "Couldn't find origin state"
 
 explore :: A.AdjacencyList -> Set.Set A.State -> [A.Label] -> A.DfaStatesMap -> A.AdjacencyList -> Set.Set A.State -> [Set.Set A.State] -> (A.AdjacencyList, Set.Set A.State)
 explore _ _ _ _ dfaAdjacency dfaFinals []                                   = (dfaAdjacency, dfaFinals)
