@@ -1,9 +1,10 @@
-module Dictionary (makeDictNFA) where
+module Dictionary (dictNfa) where
 
 import           Automaton (AdjacencyList, Automaton (..), Label (..), State)
 import           Data.Char (ord)
 import qualified Data.Map  as Map
 import qualified Data.Set  as Set
+import           WordList  (buildList)
 
 -- addWord: (non thompsons) helper method for dictNFA
 addWord :: [Char] -> AdjacencyList -> Set.Set Label -> State -> Set.Set State -> State -> (AdjacencyList, Set.Set Label, Set.Set State, State)
@@ -29,3 +30,8 @@ makeDictNFA l@(_:_) = Automaton lst alph start fi where
   (lst, salph, fi) = dictNFA l (Map.insert 0 [] Map.empty) Set.empty 0 Set.empty 0
   start = Set.singleton 0
 makeDictNFA [] = error "empty dictionary"
+
+dictNfa :: FilePath -> IO Automaton
+dictNfa fp = do
+    wordList <- buildList fp
+    return $ makeDictNFA wordList

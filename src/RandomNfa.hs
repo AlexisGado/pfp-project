@@ -1,4 +1,4 @@
-module RandomNfa (randomNFA) where
+module RandomNfa (ioRandomNfa) where
 import           Automaton     (Label (..))
 import qualified Automaton     as A
 import qualified Data.List     as List
@@ -27,22 +27,15 @@ randomNFA numStates alphabetSize nbFinals proba =
         finalStates = Set.fromList [(numStates - nbFinals)..(numStates-1)]
         -- alphabet
         alphabet = [Label i | i <- [0..(alphabetSize - 1)]]
-        -- alphabetWithEps = Epsilon : alphabet
 
         allTransitions = [
             (state1, symbol, state2) |
             state1 <- states,
             state2 <- states,
             symbol <- alphabet ]
-        -- allTransitionsEps = [
-        --     (state1, A.Epsilon, state2) |
-        --     state1 <- states,
-        --     state2 <- states]
 
         keepTransitions = [ rdInt <= proba | rdInt <- rolls (length allTransitions) 100 intForGen]
-        -- keepTransitionsEps = [ rdInt <= probaEps | rdInt <- rolls (length allTransitions) 1000 intForGen]
 
-        -- transitionsListEps = [ v | (v,keep) <- List.zip allTransitionsEps keepTransitionsEps, keep]
         transitionsList = [ v | (v,keep) <- List.zip allTransitions keepTransitions, keep]
 
         -- turn the list into a map
@@ -55,3 +48,7 @@ randomNFA numStates alphabetSize nbFinals proba =
 
         -- Generate a random start state
         initStates = Set.singleton 0
+
+ioRandomNfa :: Int -> Int -> Int -> Int -> IO A.Automaton
+ioRandomNfa nbStates alphabetSize nbFinals probability =
+    return $ randomNFA nbStates alphabetSize nbFinals probability

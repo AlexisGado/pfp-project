@@ -1,5 +1,7 @@
 module Thompson (regexParser, makeThompsonNFA) where
-import           Automaton                          (Automaton (..), Label (..))
+import           Automaton                          (AdjacencyList,
+                                                     Automaton (..), Label (..),
+                                                     State)
 import           Control.Monad                      (msum)
 import           Data.Char                          (ord)
 import qualified Data.Map                           as Map
@@ -36,7 +38,7 @@ buildAlph (Or r l) alph      = Set.union (buildAlph r alph) (buildAlph l alph)
 buildAlph (Character x) alph = Set.insert (Label x) alph
 
 -- thompsons: Build adjacency list from regex AST. Helper method for makeThompsonNFA
-thompsons :: (Num b, Ord b) => Node -> b -> b -> b -> (Map.Map b [(Label, b)], b)
+thompsons :: Node -> State -> State -> State -> (AdjacencyList, State)
 thompsons (Character x) q f l = (Map.fromList [(q, [(Label x, f)])], l)
 thompsons (Concat s t) q f l = (Map.union smap tmap, lt) where
   (smap, ls) = thompsons s q i ln

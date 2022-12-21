@@ -21,12 +21,6 @@ epsilonClosure nfaAdjacency nfaStates   | Set.size nfaStates ==  Set.size explor
                                         | otherwise = epsilonClosure nfaAdjacency explored
                     where explored = Set.union nfaStates (exploreLabelFromDFAState nfaAdjacency A.Epsilon nfaStates)
 
--- nextStates :: A.AdjacencyList -> [A.Label] -> [Set.Set A.State] -> [(A.Label, Set.Set A.State, Set.Set A.State)]
--- nextStates nfaAdjacency alphabet dfaStates = [
---         (l, s, (epsilonClosure nfaAdjacency .  exploreLabelFromDFAState nfaAdjacency l) s) |
---         s <- dfaStates,
---         l <- alphabet
---     ] `using` parList r0
 
 nextStates :: A.AdjacencyList -> [A.Label] -> [Set.Set A.State] -> [(A.Label, Set.Set A.State, Set.Set A.State)]
 nextStates nfaAdjacency alphabet dfaStates =
