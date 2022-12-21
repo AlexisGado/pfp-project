@@ -28,6 +28,7 @@ dependencies:
   - parallel
   - deepseq
   - text
+  - mtl
 
 ghc-options:
   - -Wall

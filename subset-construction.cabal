@@ -30,7 +30,7 @@ library
       Automaton
       Checks
       Dictionary
-      RandomAuto
+      RandomNfa
       SubsetConstruction
       Thompson
       WordList
@@ -43,6 +43,7 @@ library
       base >=4.7 && <5
     , containers
     , deepseq
+    , mtl
     , parallel
     , parsec
     , random
@@ -60,6 +61,7 @@ executable subset-construction-exe
       base >=4.7 && <5
     , containers
     , deepseq
+    , mtl
     , parallel
     , parsec
     , random
@@ -79,6 +81,7 @@ test-suite subset-construction-test
       base >=4.7 && <5
     , containers
     , deepseq
+    , mtl
     , parallel
     , parsec
     , random

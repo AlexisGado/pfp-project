@@ -17,7 +17,7 @@ exploreLabelFromDFAState nfaAdjacency label =
     . Set.toList
 
 epsilonClosure :: A.AdjacencyList -> Set.Set A.State -> Set.Set A.State
-epsilonClosure nfaAdjacency nfaStates    | Set.size nfaStates ==  Set.size explored = nfaStates
+epsilonClosure nfaAdjacency nfaStates   | Set.size nfaStates ==  Set.size explored = nfaStates
                                         | otherwise = epsilonClosure nfaAdjacency explored
                     where explored = Set.union nfaStates (exploreLabelFromDFAState nfaAdjacency A.Epsilon nfaStates)
 
@@ -31,7 +31,7 @@ epsilonClosure nfaAdjacency nfaStates    | Set.size nfaStates ==  Set.size explo
 nextStates :: A.AdjacencyList -> [A.Label] -> [Set.Set A.State] -> [(A.Label, Set.Set A.State, Set.Set A.State)]
 nextStates nfaAdjacency alphabet dfaStates =
         parMap rdeepseq
-        (\(l, s) -> (l, s, (epsilonClosure nfaAdjacency .  exploreLabelFromDFAState nfaAdjacency l) s))
+        (\(l, s) -> (l, s, (epsilonClosure nfaAdjacency . exploreLabelFromDFAState nfaAdjacency l) s))
         [(l,s) |
             l <- alphabet,
             s <- dfaStates
