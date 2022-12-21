@@ -1,4 +1,4 @@
-module Utils (rolls) where
+module RandomAuto (rolls) where
 import qualified Data.List     as List
 import qualified System.Random as Random
 

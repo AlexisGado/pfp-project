@@ -3,7 +3,7 @@ import           Automaton          (Automaton (..), dumbAutomaton)
 import qualified Data.Map           as Map
 import           Dictionary         (makeDictNFA)
 import qualified SubsetConstruction as SC
-import           Thompson           (buildList)
+import           WordList           (buildList)
 
 nfa1 :: IO Automaton
 nfa1 = return $ dumbAutomaton 500
@@ -16,9 +16,7 @@ dictNfa = do
 main :: IO ()
 main = do
     nfa <- dictNfa
-    let Automaton nfaAdj alph1 _ _ = nfa
-    let Automaton dfaAdj alph2 _ _ = SC.nfaToDfa nfa
-    print alph1
-    print alph2
+    let Automaton nfaAdj _ _ _ = nfa
+    let Automaton dfaAdj _ _ _ = SC.nfaToDfa nfa
     print $ Map.size nfaAdj
     print $ Map.size dfaAdj

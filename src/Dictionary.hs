@@ -7,23 +7,18 @@ import qualified Data.Set  as Set
 
 -- addWord: (non thompsons) helper method for dictNFA
 addWord :: [Char] -> AdjacencyList -> Set.Set Label -> State -> Set.Set State -> State -> (AdjacencyList, Set.Set Label, Set.Set State, State)
-addWord (x:xs) adjList alph st finalStates l = addWord xs newAdjList newAlph nl finalStates nl where
+addWord (x:xs) adjList alph fromState finalStates toState = addWord xs newAdjList newAlph toState finalStates newToState where
   t = Label (ord x)
-  nl = l + 1
+  newToState = toState + 1
   newAlph = Set.insert t alph
-  newAdjList = Map.insert st [(t, nl)] adjList
-addWord [] adjList alph _ finalStates l = (adjList, alph, newFinals, l) where
-  newFinals = Set.insert l finalStates
+  newAdjList = Map.insertWith (++) fromState [(t, toState)] adjList
+addWord [] adjList alph lastState finalStates toState = (adjList, alph, newFinals, toState) where
+  newFinals = Set.insert lastState finalStates
 
 -- dictNFA: (non thompsons) helper method for buildDictNFA
 dictNFA :: [[Char]] -> AdjacencyList -> Set.Set Label -> State -> Set.Set State -> State -> (AdjacencyList, Set.Set Label, Set.Set State)
 dictNFA (x:xs) lst alph st fi l = dictNFA xs nlst nalph st nfi nl where
-  (nlst, nalph, nfi, nl) = addWord x ilst alph il fi il
-  tmp = case Map.lookup 0 lst of
-    Just jTmp -> jTmp
-    Nothing   -> error "No initial node found"
-  newstart = (Epsilon, il):tmp
-  ilst = Map.insert 0 newstart lst
+  (nlst, nalph, nfi, nl) = addWord x lst alph 0 fi il
   il = l+1
 dictNFA [] lst alph _ fi _ = (lst, alph, fi)
 

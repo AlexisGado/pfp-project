@@ -1,13 +1,9 @@
-module Thompson (regexParser, makeThompsonNFA, checkAccept, checkAlphabet, buildList) where
-import           Automaton                          (Automaton (..), Label (..),
-                                                     State)
+module Thompson (regexParser, makeThompsonNFA) where
+import           Automaton                          (Automaton (..), Label (..))
 import           Control.Monad                      (msum)
-import           Data.Char                          (isAlpha, ord)
-import           Data.List                          (find)
+import           Data.Char                          (ord)
 import qualified Data.Map                           as Map
 import qualified Data.Set                           as Set
-import qualified Data.Text                          as T
-import           Data.Text.IO                       as TIO (readFile)
 import qualified Text.ParserCombinators.Parsec      as P
 import qualified Text.ParserCombinators.Parsec.Expr as PE
 
@@ -59,33 +55,3 @@ thompsons (Star s) q f l = (Map.union smap stmap, ls) where
   (smap, ls) = thompsons s si sf ln
   si = l+1; sf = l+2
   ln = l+2
-
--- checkAlphabet: Check if word agrees with alphabet for a given Automaton
-checkAlphabet :: [Char] -> Automaton -> Bool
-checkAlphabet (x:xs) dfa@(Automaton _ alph _ _) = n && checkAlphabet xs dfa
-        where n = Label (ord x) `elem` alph
-checkAlphabet [] _ = True
-
--- checkAccept: check if word is in a language. Automaton MUST be a DFA
-checkAccept :: [Char] -> Automaton -> State -> Bool
-checkAccept (x:xs) dfa c = case findTransition x dfa c of
-  Just e  -> checkAccept xs dfa n where (_,n) = e
-  Nothing -> False
-checkAccept [] (Automaton _ _ _ end) c = c `elem` end
-
-findTransition :: Char -> Automaton -> Int -> Maybe (Label, State)
-findTransition x (Automaton lst _ _ _) c = case Map.lookup c lst of
- Just es -> find (\y -> fst y == Label (ord x)) es
- Nothing -> Nothing
-
-buildList :: FilePath -> IO [[Char]]
-buildList filename = do
- h <- TIO.readFile filename
- let l = T.words h
- let lnorm = map normalize l
- let lnormset = Set.fromList lnorm
- let lnormunique = Set.toList lnormset
- return lnormunique
-
-normalize :: T.Text -> [Char]
-normalize string = [ x | x <- a, isAlpha x ] where a = T.unpack (T.toLower string)

@@ -28,10 +28,12 @@ source-repository head
 library
   exposed-modules:
       Automaton
+      Checks
       Dictionary
+      RandomAuto
       SubsetConstruction
       Thompson
-      Utils
+      WordList
   other-modules:
       Paths_subset_construction
   hs-source-dirs:
