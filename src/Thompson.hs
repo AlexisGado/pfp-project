@@ -1,12 +1,13 @@
 module Thompson (regexParser, makeThompsonNFA, makeDictNFA, checkAccept, checkAlphabet, buildList) where
-import           Automaton                          (Automaton (..), Label (..), State (..))
+import           Automaton                          (Automaton (..), Label (..),
+                                                     State)
 import           Control.Monad                      (msum)
-import           Data.Char                          (ord, isAlpha)
-import 			 Data.List 							( find )
-import 			 Data.Text.IO as TIO 				( readFile )
-import qualified Data.Text as T
+import           Data.Char                          (isAlpha, ord)
+import           Data.List                          (find)
 import qualified Data.Map                           as Map
 import qualified Data.Set                           as Set
+import qualified Data.Text                          as T
+import           Data.Text.IO                       as TIO (readFile)
 import qualified Text.ParserCombinators.Parsec      as P
 import qualified Text.ParserCombinators.Parsec.Expr as PE
 
@@ -73,13 +74,15 @@ addWord [] lst alph _ fi l = (lst, alph, nfi, l) where
 dictNFA :: (Num t, Ord t) => [[Char]] -> Map.Map t [(Label, t)] -> Set.Set Label -> t -> Set.Set t -> t -> (Map.Map t [(Label, t)], Set.Set Label, Set.Set t)
 dictNFA (x:xs) lst alph st fi l = dictNFA xs nlst nalph st nfi nl where
   (nlst, nalph, nfi, nl) = addWord x ilst alph il fi il
-  Just tmp = Map.lookup 0 lst
+  tmp = case Map.lookup 0 lst of
+    Just jTmp -> jTmp
+    Nothing   -> error "No initial node found"
   newstart = (Epsilon, il):tmp
   ilst = Map.insert 0 newstart lst
   il = l+1
 dictNFA [] lst alph _ fi _ = (lst, alph, fi)
 
--- makeDictNFA: Build NFA from dict of accepted strings in a language 
+-- makeDictNFA: Build NFA from dict of accepted strings in a language
 makeDictNFA :: [[Char]] -> Automaton
 makeDictNFA l@(_:_) = Automaton lst alph start fi where
   alph = Set.toList salph
@@ -96,7 +99,7 @@ checkAlphabet [] _ = True
 -- checkAccept: check if word is in a language. Automaton MUST be a DFA
 checkAccept :: [Char] -> Automaton -> State -> Bool
 checkAccept (x:xs) dfa c = case findTransition x dfa c of
-  Just e -> checkAccept xs dfa n where (_,n) = e
+  Just e  -> checkAccept xs dfa n where (_,n) = e
   Nothing -> False
 checkAccept [] (Automaton _ _ _ end) c = c `elem` end
 
